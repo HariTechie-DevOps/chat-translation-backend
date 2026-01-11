@@ -1,7 +1,5 @@
-package com.example.chatapp.entity;
-
-import jakarta.persistence.*;
-import lombok.*;
+import com.fasterxml.jackson.annotation.JsonProperty;
+// ... other imports
 
 @Entity
 @Getter @Setter
@@ -13,6 +11,8 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @JsonProperty("username") // This bridges the gap!
     private String name;
+
     private String language;
 }
