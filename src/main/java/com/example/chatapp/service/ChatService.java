@@ -26,19 +26,23 @@ public class ChatService {
         User sender = userRepo.findById(senderId).orElseThrow();
         User receiver = userRepo.findById(receiverId).orElseThrow();
 
-        // Use the improved repository method
         ChatRoom room = chatRoomRepo.findChatRoom(senderId, receiverId)
                 .orElseGet(() -> chatRoomRepo.save(new ChatRoom(null, senderId, receiverId)));
 
-        // logic to only save to DB if it's the FIRST call (for the sender)
-        if (!forReceiver) {
-            Message message = new Message(null, chatRoomId, senderId, originalMessage, null, timestamp);
-            messageRepo.save(msg);
-        }
+        // We calculate the translation first so we can save it to the DB
+        String translated = translationService.translate(text, sender.getLanguage(), receiver.getLanguage());
 
-        String translated = forReceiver
-                ? translationService.translate(text, sender.getLanguage(), receiver.getLanguage())
-                : null;
+        if (!forReceiver) {
+            // Using Setters avoids constructor argument length errors!
+            Message message = new Message();
+            message.setChatRoomId(room.getId()); // Use the ID from the 'room' object we found/created
+            message.setSenderId(senderId);
+            message.setOriginalMessage(text);
+            message.setTranslatedMessage(translated); // Save the translation too!
+            message.setTimestamp(timestamp != null ? timestamp : LocalDateTime.now());
+            
+            messageRepo.save(message);
+        }
 
         return new ChatMessageResponse(senderId, text, translated, timestamp);
     }
