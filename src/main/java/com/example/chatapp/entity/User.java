@@ -1,6 +1,7 @@
 package com.example.chatapp.entity; // Must match folder
 
 import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import com.fasterxml.jackson.annotation.JsonProperty;
