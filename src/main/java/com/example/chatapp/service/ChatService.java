@@ -32,7 +32,7 @@ public class ChatService {
 
         // logic to only save to DB if it's the FIRST call (for the sender)
         if (!forReceiver) {
-            Message msg = new Message(null, room.getId(), senderId, text, timestamp);
+            Message message = new Message(null, chatRoomId, senderId, originalMessage, null, timestamp);
             messageRepo.save(msg);
         }
 
