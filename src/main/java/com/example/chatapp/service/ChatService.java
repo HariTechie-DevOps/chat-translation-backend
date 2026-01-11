@@ -22,27 +22,24 @@ public class ChatService {
         this.translationService = t;
     }
 
-    public ChatMessageResponse processMessage(Long senderId, Long receiverId, String text, boolean forReceiver) {
-        User sender = userRepo.findById(senderId).orElseThrow(() -> new RuntimeException("Sender not found"));
-        User receiver = userRepo.findById(receiverId).orElseThrow(() -> new RuntimeException("Receiver not found"));
+    public ChatMessageResponse processMessage(Long senderId, Long receiverId, String text, boolean forReceiver, LocalDateTime timestamp) {
+        User sender = userRepo.findById(senderId).orElseThrow();
+        User receiver = userRepo.findById(receiverId).orElseThrow();
 
-        // Find room regardless of who started it
-        ChatRoom room = chatRoomRepo.findByUser1IdAndUser2Id(senderId, receiverId)
-                .or(() -> chatRoomRepo.findByUser1IdAndUser2Id(receiverId, senderId))
+        // Use the improved repository method
+        ChatRoom room = chatRoomRepo.findChatRoom(senderId, receiverId)
                 .orElseGet(() -> chatRoomRepo.save(new ChatRoom(null, senderId, receiverId)));
 
-        Message msg = new Message(null, room.getId(), senderId, text, LocalDateTime.now());
-        messageRepo.save(msg);
-
-        String translated = null;
-        if (forReceiver && !sender.getLanguage().equals(receiver.getLanguage())) {
-            try {
-                translated = translationService.translate(text, sender.getLanguage(), receiver.getLanguage());
-            } catch (Exception e) {
-                translated = "[Translation Error]: " + text;
-            }
+        // logic to only save to DB if it's the FIRST call (for the sender)
+        if (!forReceiver) {
+            Message msg = new Message(null, room.getId(), senderId, text, timestamp);
+            messageRepo.save(msg);
         }
 
-        return new ChatMessageResponse(senderId, text, translated, msg.getTimestamp());
+        String translated = forReceiver
+                ? translationService.translate(text, sender.getLanguage(), receiver.getLanguage())
+                : null;
+
+        return new ChatMessageResponse(senderId, text, translated, timestamp);
     }
 }
