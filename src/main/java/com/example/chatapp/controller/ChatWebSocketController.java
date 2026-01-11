@@ -19,23 +19,28 @@ public class ChatWebSocketController {
 
     @MessageMapping("/chat.send")
     public void send(ChatMessageRequest request) {
+        // 1. Create one timestamp for both calls
+        java.time.LocalDateTime now = java.time.LocalDateTime.now();
 
+        // 2. Pass 'now' as the 5th argument
         messagingTemplate.convertAndSend(
-                "/topic/chat/" + request.getSenderId(),
-                chatService.processMessage(
-                        request.getSenderId(),
-                        request.getReceiverId(),
-                        request.getMessage(),
-                        false)
+            "/topic/chat/" + request.getSenderId(),
+            chatService.processMessage(
+                    request.getSenderId(),
+                    request.getReceiverId(),
+                    request.getMessage(),
+                    false, 
+                    now) // Added 5th argument
         );
 
         messagingTemplate.convertAndSend(
-                "/topic/chat/" + request.getReceiverId(),
-                chatService.processMessage(
-                        request.getSenderId(),
-                        request.getReceiverId(),
-                        request.getMessage(),
-                        true)
+            "/topic/chat/" + request.getReceiverId(),
+            chatService.processMessage(
+                    request.getSenderId(),
+                    request.getReceiverId(),
+                    request.getMessage(),
+                    true, 
+                    now) // Added 5th argument
         );
     }
 }
