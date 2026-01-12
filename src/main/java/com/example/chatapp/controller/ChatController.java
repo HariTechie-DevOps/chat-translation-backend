@@ -2,6 +2,9 @@ package com.example.chatapp.controller;
 
 import com.example.chatapp.entity.User;
 import com.example.chatapp.entity.Message;
+import com.example.chatapp.dto.ChatMessageRequest;   // Added Import
+import com.example.chatapp.dto.ChatMessageResponse;  // Added Import
+import com.example.chatapp.service.ChatService;      // Added Import
 import com.example.chatapp.repository.UserRepository;
 import com.example.chatapp.repository.MessageRepository;
 import org.springframework.web.bind.annotation.*;
@@ -14,13 +17,13 @@ public class ChatController {
 
     private final UserRepository userRepo;
     private final MessageRepository messageRepo;
+    private final ChatService chatService; // Inject ChatService
 
-    public ChatController(UserRepository userRepo, MessageRepository messageRepo) {
+    public ChatController(UserRepository userRepo, MessageRepository messageRepo, ChatService chatService) {
         this.userRepo = userRepo;
         this.messageRepo = messageRepo;
+        this.chatService = chatService;
     }
-
-    // --- USER ENDPOINTS ---
 
     @PostMapping("/users")
     public User createUser(@RequestBody User user) {
@@ -32,16 +35,14 @@ public class ChatController {
         return userRepo.findAll();
     }
 
-    // --- MESSAGE ENDPOINTS ---
-
     @PostMapping("/messages")
     public ChatMessageResponse sendMessage(@RequestBody ChatMessageRequest request) {
-        // This now calls the same logic your WebSocket uses!
+        // Use the service logic so translation actually happens
         return chatService.processMessage(
                 request.getSenderId(), 
                 request.getReceiverId(), 
                 request.getMessage(), 
-                true, // Set to true to see the translated version in the response
+                true, 
                 java.time.LocalDateTime.now()
         );
     }
