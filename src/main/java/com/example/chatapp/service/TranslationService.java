@@ -16,7 +16,7 @@ public class TranslationService {
 
         try {
             // Using a more reliable testing endpoint or your own local Docker instance
-            String url = "https://libretranslate.com/translate";
+            String url = "http://localhost:5000/translate";
             
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
