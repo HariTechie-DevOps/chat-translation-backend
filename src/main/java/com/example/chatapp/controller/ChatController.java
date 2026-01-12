@@ -35,9 +35,15 @@ public class ChatController {
     // --- MESSAGE ENDPOINTS ---
 
     @PostMapping("/messages")
-    public Message sendMessage(@RequestBody Message message) {
-        // In a later step, we will add translation logic here
-        return messageRepo.save(message);
+    public ChatMessageResponse sendMessage(@RequestBody ChatMessageRequest request) {
+        // This now calls the same logic your WebSocket uses!
+        return chatService.processMessage(
+                request.getSenderId(), 
+                request.getReceiverId(), 
+                request.getMessage(), 
+                true, // Set to true to see the translated version in the response
+                java.time.LocalDateTime.now()
+        );
     }
 
     @GetMapping("/messages")
