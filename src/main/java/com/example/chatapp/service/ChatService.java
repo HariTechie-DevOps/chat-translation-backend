@@ -4,7 +4,6 @@ import com.example.chatapp.dto.ChatMessageResponse;
 import com.example.chatapp.entity.*;
 import com.example.chatapp.repository.*;
 import org.springframework.stereotype.Service;
-
 import java.time.LocalDateTime;
 
 @Service
@@ -29,21 +28,25 @@ public class ChatService {
         ChatRoom room = chatRoomRepo.findChatRoom(senderId, receiverId)
                 .orElseGet(() -> chatRoomRepo.save(new ChatRoom(null, senderId, receiverId)));
 
-        // We calculate the translation first so we can save it to the DB
+        // Logic: Translation only happens from sender language -> receiver language
         String translated = translationService.translate(text, sender.getLanguage(), receiver.getLanguage());
 
         if (!forReceiver) {
-            // Using Setters avoids constructor argument length errors!
+            // Save to database only once (when processing for the sender side)
             Message message = new Message();
-            message.setChatRoomId(room.getId()); // Use the ID from the 'room' object we found/created
+            message.setChatRoomId(room.getId());
             message.setSenderId(senderId);
             message.setOriginalMessage(text);
-            message.setTranslatedMessage(translated); // Save the translation too!
+            message.setTranslatedMessage(translated);
             message.setTimestamp(timestamp != null ? timestamp : LocalDateTime.now());
-            
             messageRepo.save(message);
-        }
 
-        return new ChatMessageResponse(senderId, text, translated, timestamp);
+            // SENDER SIDE: Content is the original text
+            return new ChatMessageResponse(senderId, text, text, null, timestamp);
+        } else {
+            // RECEIVER SIDE: Content is original + translation
+            // Similar to how WhatsApp "Translate" features look
+            return new ChatMessageResponse(senderId, translated, text, translated, timestamp);
+        }
     }
 }
